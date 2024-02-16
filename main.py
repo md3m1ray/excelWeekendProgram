@@ -1,13 +1,14 @@
+import tkinter
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, Menu
 import openpyxl
+
+PATH = "people.xlsx"
 
 
 def load_data():
-    path = "people.xlsx"
-    workbook = openpyxl.load_workbook(path)
+    workbook = openpyxl.load_workbook(PATH)
     sheet = workbook.active
-
     list_values = list(sheet.values)
 
     for col_name in list_values[0]:
@@ -18,8 +19,7 @@ def load_data():
 
 
 def delete_row():
-    path = "people.xlsx"
-    workbook = openpyxl.load_workbook(path)
+    workbook = openpyxl.load_workbook(PATH)
     sheet = workbook.active
     selected_item2 = treeview.focus()
 
@@ -29,7 +29,8 @@ def delete_row():
                 sheet.delete_rows(cell.row)
                 treeview.delete(selected_item2)
 
-    workbook.save(path)
+    workbook.save(PATH)
+    get_all()
 
 
 def insert_row():
@@ -37,45 +38,45 @@ def insert_row():
     name = name_entry.get()
     day = status_combobox.get()
 
-    path = "people.xlsx"
-    workbook = openpyxl.load_workbook(path)
+    workbook = openpyxl.load_workbook(PATH)
     sheet = workbook.active
     row_values = [id_, name, day]
     sheet.append(row_values)
-    workbook.save(path)
+    workbook.save(PATH)
 
     treeview.insert('', tk.END, values=row_values)
 
     name_entry.delete(0, "end")
     name_entry.insert(0, "İsim Soyisim")
 
+    get_all()
 
-# def on_double_click(event):
-#     print(treeview.set(treeview.identify_row(event.y)))
 
-def get_id(event):
-    focused = treeview.focus()
-    path = "people.xlsx"
-    workbook = openpyxl.load_workbook(path)
+def get_all():
+    workbook = openpyxl.load_workbook(PATH)
     sheet = workbook.active
+    row_num = 2
 
-    cur_item = treeview.item(treeview.focus())
-    for row in sheet.iter_rows(min_row=2, min_col=1, max_row=100, max_col=2, values_only=False):
-        for cell in row:
-            if cell.value == f"{cur_item['values'][1]}":
-                sheet.cell(row=cell.row, column=1).value = f"{focused}"
+    for id_item in treeview.get_children():
+        treeview.set(id_item, column=0, value=id_item)
+        sheet.cell(row=row_num, column=1).value = id_item
+        row_num += 1
 
-    treeview.set(focused, column=0, value=focused)
+    workbook.save(PATH)
 
-    workbook.save(path)
+
+def toggle_mode():
+    if mode_switch.instate(["selected"]):
+        style.theme_use("forest-light")
+    else:
+        style.theme_use("forest-dark")
 
 
 def add_day():
     focused = treeview.focus()
     day = status_combobox.get()
 
-    path = "people.xlsx"
-    workbook = openpyxl.load_workbook(path)
+    workbook = openpyxl.load_workbook(PATH)
     sheet = workbook.active
 
     for row in sheet.iter_rows(min_row=2, min_col=1, max_row=100, max_col=1, values_only=False):
@@ -85,40 +86,45 @@ def add_day():
 
     treeview.set(focused, column=2, value=day)
 
-    workbook.save(path)
+    workbook.save(PATH)
 
 
-def select_all():
-    for item in treeview.get_children():
-        select_children(item)
-        get_all()
+def saturday():
+    focused = treeview.focus()
+    day = "Cumartesi"
 
-
-def select_children(item):
-    treeview.selection_add(item)
-
-
-def get_all():
-    path = "people.xlsx"
-    workbook = openpyxl.load_workbook(path)
+    workbook = openpyxl.load_workbook(PATH)
     sheet = workbook.active
 
-    for item in treeview.get_children():
-        for i in item:
-            ids = "I00" + str(i)
-            r = 2
-            treeview.set(item, column=0, value=ids)
-            sheet.cell(row=r, column=1).value = ids
-            r += 1
+    for row in sheet.iter_rows(min_row=2, min_col=1, max_row=100, max_col=1, values_only=False):
+        for cell in row:
+            if cell.value == f"{focused}":
+                sheet.cell(row=cell.row, column=3).value = day
 
-    workbook.save(path)
+    treeview.set(focused, column=2, value=day)
+
+    workbook.save(PATH)
 
 
-def toggle_mode():
-    if mode_switch.instate(["selected"]):
-        style.theme_use("forest-light")
-    else:
-        style.theme_use("forest-dark")
+def sunday():
+    focused = treeview.focus()
+    day = "Pazar"
+
+    workbook = openpyxl.load_workbook(PATH)
+    sheet = workbook.active
+
+    for row in sheet.iter_rows(min_row=2, min_col=1, max_row=100, max_col=1, values_only=False):
+        for cell in row:
+            if cell.value == f"{focused}":
+                sheet.cell(row=cell.row, column=3).value = day
+
+    treeview.set(focused, column=2, value=day)
+
+    workbook.save(PATH)
+
+
+def day_popup(e):
+    day_menu.tk_popup(e.x_root, e.y_root)
 
 
 root = tk.Tk()
@@ -153,25 +159,22 @@ button.grid(row=6, column=0, padx=5, pady=5, sticky="nsew")
 separator = ttk.Separator(widgets_frame)
 separator.grid(row=7, column=0, padx=(20, 10), pady=10, sticky="ew")
 
-button = ttk.Button(widgets_frame, text="ID Güncelle", command=select_all)
-button.grid(row=8, column=0, padx=5, pady=5, sticky="nsew")
-
 separator = ttk.Separator(widgets_frame)
-separator.grid(row=9, column=0, padx=(20, 10), pady=10, sticky="ew")
+separator.grid(row=8, column=0, padx=(20, 10), pady=10, sticky="ew")
 
 status_combobox = ttk.Combobox(widgets_frame, values=combo_list)
 status_combobox.current(0)
-status_combobox.grid(row=10, column=0, sticky="ew")
+status_combobox.grid(row=9, column=0, sticky="ew")
 
 button = ttk.Button(widgets_frame, text="Seç ve Değiştir", command=add_day)
-button.grid(row=11, column=0, padx=5, pady=5, sticky="nsew")
+button.grid(row=10, column=0, padx=5, pady=5, sticky="nsew")
 
 separator = ttk.Separator(widgets_frame)
-separator.grid(row=12, column=0, padx=(20, 10), pady=10, sticky="ew")
+separator.grid(row=11, column=0, padx=(20, 10), pady=10, sticky="ew")
 
 mode_switch = ttk.Checkbutton(
     widgets_frame, text="Tema", style="Switch", command=toggle_mode)
-mode_switch.grid(row=13, column=0, padx=5, pady=10, sticky="nsew")
+mode_switch.grid(row=12, column=0, padx=5, pady=10, sticky="nsew")
 
 treeFrame = ttk.Frame(frame)
 treeFrame.grid(row=0, column=1, pady=10)
@@ -182,16 +185,19 @@ cols = ("ID", "İsim Soyisim", "Gün")
 treeview = ttk.Treeview(treeFrame, show="headings",
                         yscrollcommand=treeScroll.set, columns=cols, height=35)
 
-treeview.column("ID", width=60)
-treeview.column("İsim Soyisim", width=200)
-treeview.column("Gün", width=70)
+treeview.column("ID", width=50, anchor=tkinter.CENTER)
+treeview.column("İsim Soyisim", width=200, anchor=tkinter.CENTER)
+treeview.column("Gün", width=65, anchor=tkinter.CENTER)
 
-treeview.bind("<Double-1>", get_id)
-# treeview.bind("<Return>", lambda e: get_id)
+day_menu = Menu(root, tearoff=False)
+day_menu.add_command(label="Cumartesi", command=saturday)
+day_menu.add_command(label="Pazar", command=sunday)
+
+root.bind("<Button-3>", day_popup)
 
 treeview.pack()
 treeScroll.config(command=treeview.yview)
 
 load_data()
-
+get_all()
 root.mainloop()
